@@ -40,12 +40,7 @@ contract CryptoInterestBank {
     event MinBankBalanceUpdated(uint256 newMinBankBalance_);
 
     // Constructor
-    constructor(
-        uint256 maxBalance_,
-        address admin_,
-        uint256 interestRate_,
-        uint256 minBankBalance_
-    ) {
+    constructor(uint256 maxBalance_, address admin_, uint256 interestRate_, uint256 minBankBalance_) {
         maxBalance = maxBalance_;
         admin = admin_;
         contractPaused = false;
@@ -55,10 +50,7 @@ contract CryptoInterestBank {
 
     // Deposit Ether
     function deposit() external payable NotPaused {
-        require(
-            users[msg.sender].balance + msg.value <= maxBalance,
-            "Max balance exceeded"
-        );
+        require(users[msg.sender].balance + msg.value <= maxBalance, "Max balance exceeded");
 
         uint256 interest = calculateInterest(msg.sender);
         if (interest > 0) {
@@ -73,17 +65,14 @@ contract CryptoInterestBank {
     // Withdraw Ether
     function withdraw(uint256 amount) external NotPaused {
         require(amount <= users[msg.sender].balance, "Insufficient balance");
-        require(
-            address(this).balance >= minBankBalance,
-            "Bank balance below minimum limit"
-        );
+        require(address(this).balance >= minBankBalance, "Bank balance below minimum limit");
         // Calcular el interés acumulado antes de realizar el retiro
         uint256 interest = calculateInterest(msg.sender);
         if (interest > 0) {
             claimInterest();
         }
         users[msg.sender].balance -= amount;
-        (bool success, ) = msg.sender.call{value: amount}("");
+        (bool success,) = msg.sender.call{value: amount}("");
         require(success, "Withdraw failed");
         emit WithdrawEth(msg.sender, amount);
     }
@@ -94,7 +83,7 @@ contract CryptoInterestBank {
         require(interest > 0, "No interest available");
         users[msg.sender].balance += interest;
         users[msg.sender].lastDepositTimestamp = block.timestamp;
-        (bool success, ) = msg.sender.call{value: interest}("");
+        (bool success,) = msg.sender.call{value: interest}("");
         require(success, "Claim failed");
         emit InterestPaid(msg.sender, interest);
     }
@@ -102,11 +91,8 @@ contract CryptoInterestBank {
     // Calculate interest
     function calculateInterest(address user) private view returns (uint256) {
         if (users[user].balance > 0) {
-            uint256 timeElapsed = block.timestamp -
-                users[user].lastDepositTimestamp;
-            return
-                (users[user].balance * annualInterestRate * timeElapsed) /
-                (365 days * 10000);
+            uint256 timeElapsed = block.timestamp - users[user].lastDepositTimestamp;
+            return (users[user].balance * annualInterestRate * timeElapsed) / (365 days * 10000);
         }
         return 0;
     }
