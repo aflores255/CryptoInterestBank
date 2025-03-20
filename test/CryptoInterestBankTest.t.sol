@@ -19,12 +19,7 @@ contract CryptoInterestBankTest is Test {
 
     function setUp() public {
         // initialize contract
-        bank = new CryptoInterestBank(
-            maxBalance,
-            admin,
-            annualInterestRate,
-            minBankBalance
-        );
+        bank = new CryptoInterestBank(maxBalance, admin, annualInterestRate, minBankBalance);
 
         // Fund user 1 and 2 with Ether
         vm.deal(user1, 200 ether);
@@ -41,7 +36,7 @@ contract CryptoInterestBankTest is Test {
         //First user deposits ether
         vm.prank(user1);
         bank.deposit{value: firstDepositValue}();
-        (uint256 FirstUserBalance, ) = bank.users(user1);
+        (uint256 FirstUserBalance,) = bank.users(user1);
         assert(FirstUserBalance == firstDepositValue);
         assert(bank.getBankBalance() == bankBalance + firstDepositValue);
 
@@ -50,7 +45,7 @@ contract CryptoInterestBankTest is Test {
 
         vm.prank(user2);
         bank.deposit{value: SecondDepositValue}();
-        (uint256 SecondUserBalance, ) = bank.users(user2);
+        (uint256 SecondUserBalance,) = bank.users(user2);
         assert(SecondUserBalance == SecondDepositValue);
         assert(bank.getBankBalance() == bankBalance + SecondDepositValue);
     }
@@ -76,35 +71,25 @@ contract CryptoInterestBankTest is Test {
 
         //Simulate time
         vm.warp(block.timestamp + simulatedDays);
-        (uint256 balanceBeforeSecondDeposit, ) = bank.users(user1);
+        (uint256 balanceBeforeSecondDeposit,) = bank.users(user1);
 
         //Second deposit with interest
 
         bank.deposit{value: secondDepositValue}();
-        (uint256 UserFinalBalance, ) = bank.users(user1);
+        (uint256 UserFinalBalance,) = bank.users(user1);
 
         //expected interest
-        uint256 expectedInterest = (firstDepositValue *
-            annualInterestRate *
-            simulatedDays) / (365 days * 10000);
+        uint256 expectedInterest = (firstDepositValue * annualInterestRate * simulatedDays) / (365 days * 10000);
         //expected balance
-        uint256 expectedBalanceAfter = balanceBeforeSecondDeposit +
-            secondDepositValue +
-            expectedInterest;
+        uint256 expectedBalanceAfter = balanceBeforeSecondDeposit + secondDepositValue + expectedInterest;
 
         bankBalance = address(bank).balance;
 
         //Check final balance
-        assert(
-            (UserFinalBalance == expectedBalanceAfter) &&
-                (expectedInterest != 0)
-        );
+        assert((UserFinalBalance == expectedBalanceAfter) && (expectedInterest != 0));
 
         //Check Bank Balance
-        assert(
-            bankBalance ==
-                firstDepositValue + secondDepositValue - expectedInterest
-        );
+        assert(bankBalance == firstDepositValue + secondDepositValue - expectedInterest);
         vm.stopPrank();
     }
 
@@ -118,12 +103,9 @@ contract CryptoInterestBankTest is Test {
         bank.withdraw(firstWithdraw);
 
         bankBalance = address(bank).balance;
-        (uint256 UserFinalBalance, ) = bank.users(user1);
+        (uint256 UserFinalBalance,) = bank.users(user1);
 
-        assert(
-            (bankBalance == firstDepositValue - firstWithdraw) &&
-                (UserFinalBalance == firstWithdraw)
-        );
+        assert((bankBalance == firstDepositValue - firstWithdraw) && (UserFinalBalance == firstWithdraw));
 
         vm.stopPrank();
     }
@@ -143,25 +125,18 @@ contract CryptoInterestBankTest is Test {
         bank.withdraw(firstWithdraw);
 
         bankBalance = address(bank).balance;
-        (uint256 UserFinalBalance, ) = bank.users(user1);
+        (uint256 UserFinalBalance,) = bank.users(user1);
 
         //expected interest
-        uint256 expectedInterest = (firstDepositValue *
-            annualInterestRate *
-            simulatedDays) / (365 days * 10000);
+        uint256 expectedInterest = (firstDepositValue * annualInterestRate * simulatedDays) / (365 days * 10000);
         //expected balance
         uint256 expectedBalanceAfter = firstWithdraw + expectedInterest;
 
         //Check final balance
-        assert(
-            (UserFinalBalance == expectedBalanceAfter) &&
-                (expectedInterest != 0)
-        );
+        assert((UserFinalBalance == expectedBalanceAfter) && (expectedInterest != 0));
 
         //Check Bank Balance
-        assert(
-            bankBalance == firstDepositValue - firstWithdraw - expectedInterest
-        );
+        assert(bankBalance == firstDepositValue - firstWithdraw - expectedInterest);
 
         vm.stopPrank();
     }
@@ -207,9 +182,7 @@ contract CryptoInterestBankTest is Test {
         vm.warp(block.timestamp + daysSimulated);
         bank.claimInterest();
 
-        expectedInterest =
-            (firstDepositValue * annualInterestRate * daysSimulated) /
-            (365 days * 10000);
+        expectedInterest = (firstDepositValue * annualInterestRate * daysSimulated) / (365 days * 10000);
         bankBalance = address(bank).balance;
         assert(bankBalance == firstDepositValue - expectedInterest);
     }
@@ -326,7 +299,7 @@ contract CryptoInterestBankTest is Test {
         vm.startPrank(user1);
         bank.deposit{value: depositAmount_}();
 
-        (uint256 userBalance, ) = bank.users(user1);
+        (uint256 userBalance,) = bank.users(user1);
 
         assert(userBalance == depositAmount_);
         assert(bank.getBankBalance() == initialBankBalance + depositAmount_);
@@ -348,7 +321,7 @@ contract CryptoInterestBankTest is Test {
         bank.deposit{value: depositAmount_}();
         bank.withdraw(withdrawAmount);
 
-        (uint256 userBalance, ) = bank.users(user1);
+        (uint256 userBalance,) = bank.users(user1);
         assert(userBalance == depositAmount_ - withdrawAmount);
         assert(address(bank).balance == depositAmount_ - withdrawAmount);
 
@@ -356,10 +329,7 @@ contract CryptoInterestBankTest is Test {
     }
 
     // Claim
-    function testFuzzInterestCalculation(
-        uint256 depositAmount_,
-        uint256 elapsedTime_
-    ) public {
+    function testFuzzInterestCalculation(uint256 depositAmount_, uint256 elapsedTime_) public {
         // Adjust Range using bound
         depositAmount_ = bound(depositAmount_, 1 ether, maxBalance);
         elapsedTime_ = bound(elapsedTime_, 1 days, 5 * 365 days);
@@ -369,13 +339,11 @@ contract CryptoInterestBankTest is Test {
 
         vm.warp(block.timestamp + elapsedTime_);
 
-        uint256 expectedInterest = (depositAmount_ *
-            annualInterestRate *
-            elapsedTime_) / (365 days * 10000);
+        uint256 expectedInterest = (depositAmount_ * annualInterestRate * elapsedTime_) / (365 days * 10000);
 
         bank.claimInterest();
 
-        (uint256 userBalance, ) = bank.users(user1);
+        (uint256 userBalance,) = bank.users(user1);
         assert(userBalance >= depositAmount_ + expectedInterest);
         vm.stopPrank();
     }
